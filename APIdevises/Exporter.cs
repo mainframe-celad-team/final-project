@@ -8,7 +8,7 @@ namespace APIdevises
 {
     internal abstract class Exporter
     {
-        protected abstract string Extension { get; }
+        public abstract string Extension { get; }
 
         protected abstract string GenererContenu(List<Cotation> cotations);
 

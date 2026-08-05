@@ -21,8 +21,17 @@ namespace APIdevises
             _mapper = mapper;
             _exporters = exporters;
         }
-        public async Task RunOrchestrator()
+        public async Task RunOrchestratorAsync()
         {
+            var menu = new MenuSelection();
+            List<Exporter> exportersChoisis = menu.DemanderFormats(_exporters);
+
+            if (exportersChoisis.Count == 0)
+            {
+                Console.WriteLine("Aucun format d'exportation choisi. Fin du programme.");
+                return;
+            }
+
             var rates = await _client.GetRatesAsync("USD");
 
             var cotations = _mapper.Map(rates);

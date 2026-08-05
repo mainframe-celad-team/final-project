@@ -9,7 +9,7 @@ namespace APIdevises
 {
     internal class JsonExporter : Exporter
     {
-        protected override string Extension => "json";
+        public override string Extension => "json";
 
         protected override string GenererContenu(List<Cotation> cotations)
         {
