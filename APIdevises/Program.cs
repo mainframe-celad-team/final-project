@@ -34,5 +34,16 @@ internal class Program
         {
             Console.WriteLine($"{c.Code} = {c.Value} (date : {c.Date})");
         }
+
+        if (cotations.Count == 0)
+        {
+            Console.WriteLine("Aucune cotation à exporter.");
+            return;
+        }
+
+        DateOnly dateCotation = DateOnly.FromDateTime(DateTime.Now);
+
+        var jsonExporter = new JsonExporter();
+        jsonExporter.ExporterVersFichier(cotations, dateCotation);
     }
 }
