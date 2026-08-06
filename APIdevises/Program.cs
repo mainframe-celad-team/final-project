@@ -17,7 +17,8 @@ internal class Program
         var mapper = new CotationMapper();
         var exporters = new List<Exporter>
         {
-            new JsonExporter()
+            new JsonExporter(),
+            new XmlExporter()
         };
 
         var orchestrator = new ExportOrchestrator(client, mapper, exporters);

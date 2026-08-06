@@ -19,6 +19,5 @@ namespace APIdevises
             File.WriteAllText(nomFichier, contenu);
             Console.WriteLine($"Fichier généré : {nomFichier}");
         }
-
     }
 }
