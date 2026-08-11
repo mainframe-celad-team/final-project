@@ -1,0 +1,23 @@
+//JP5PADF  JOB DPTM,VSAM,MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//     NOTIFY=&SYSUID,TIME=(0,5)
+//*------------------------------------------------------*
+//* KSDS PARTS : DELETE + DEFINE (VIDE) - PARTIE 5        *
+//*------------------------------------------------------*
+//*
+//DELETE   EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+   DELETE API3.PROJET.NEWPARTS.KSDS CLUSTER
+   SET MAXCC = 0
+/*
+//DEFINE   EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+   DEFINE CLUSTER (NAME(API3.PROJET.NEWPARTS.KSDS) -
+          INDEXED -
+          KEYS(2 0) -
+          RECORDSIZE(80 80) -
+          TRACKS(1 1)) -
+      DATA (NAME(API3.PROJET.NEWPARTS.KSDS.DATA)) -
+      INDEX (NAME(API3.PROJET.NEWPARTS.KSDS.INDEX))
+/*

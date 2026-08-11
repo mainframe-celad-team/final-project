@@ -1,0 +1,11 @@
+//JP5MSLG  JOB DPTM,VSAM,MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//     NOTIFY=&SYSUID,TIME=(0,5)
+//*------------------------------------------------------*
+//* COMPILATION MAPSET LOGIN (PARTIE 5)                   *
+//*------------------------------------------------------*
+//*
+//         JCLLIB ORDER=SDJ.FORM.PROCLIB
+//         EXEC COMPMAP,MAP=MS3LOG
+//*
+//STEPEXT.SYSUT1   DD DSN=API3.SOURCE.BMS(&MAP),DISP=SHR
+//STEPCOP.SYSPUNCH DD DSN=API3.SOURCE.COPY(&MAP),DISP=SHR
