@@ -1,8 +1,4 @@
-## Team
-- arion-a-reaction = Laurien PITROU FAIZEAU
-- houssamgh992-crypto = Houssam GHAJDAOUI ALAOUI 
-- Timdev0 = Quentin PELTIER
-
+# final-project
 ## Partie 4 : Statistiques
 - Solution effectué avec PACBASE
 

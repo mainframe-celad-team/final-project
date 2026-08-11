@@ -1,0 +1,33 @@
+//JP4E     JOB (ACCT#),'GROUPE 4',MSGCLASS=H,REGION=4M,
+//    CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,TIME=(0,30),
+//    COND=(8,LT)
+//***************************************************
+//* PARTIE 4 - STATISTIQUES
+//* STEP01 : SUPPRESSION DU FICHIER STATS
+//***************************************************
+//DELSTAT  EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+ DELETE API3.PROJET.STATS.DATA PURGE
+ IF LASTCC = 8 THEN SET MAXCC = 0
+/*
+//***************************************************
+//* STEP02 : CREATION DU FICHIER STATS
+//***************************************************
+//*CRESTAT  EXEC PGM=IEFBR14
+//*STATS    DD DSN=API3.PROJET.STATS.DATA,
+//*            DISP=(NEW,CATLG,DELETE),
+//*            SPACE=(TRK,(1,1)),
+//*            DCB=(RECFM=FB,LRECL=133,BLKSIZE=1330)
+//***************************************************
+//* STEP03 : EXECUTION DU PROGRAMME PGSTAT
+//***************************************************
+//EXECPGM  EXEC PGM=PGSTAT
+//STEPLIB  DD DSN=API3.COBOL.LOAD,DISP=SHR
+//DDVE     DD DSN=API3.PROJET.EXTRSUM.DATA,DISP=SHR
+//DDSE     DD DSN=API3.PROJET.STATS.DATA,
+//            DISP=(NEW,CATLG,DELETE),
+//            SPACE=(TRK,(1,1)),
+//            DCB=(RECFM=FB,LRECL=134,BLKSIZE=1340)
+//SYSOUT   DD SYSOUT=*
+//*SYSPRINT DD SYSOUT=*
