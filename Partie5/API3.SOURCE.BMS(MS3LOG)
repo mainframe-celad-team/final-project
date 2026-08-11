@@ -1,0 +1,137 @@
+MS3LOG   DFHMSD TYPE=&SYSPARM,                                         X00010000
+               MODE=INOUT,                                             X00020000
+               CTRL=FREEKB,                                            X00030000
+               LANG=COBOL,                                             X00040000
+               TIOAPFX=YES,                                            X00050000
+               DSATTS=COLOR,                                           X00060000
+               MAPATTS=COLOR,                                          X00070000
+               STORAGE=AUTO                                             00080000
+*********************************************************************** 00090000
+MAP3LOG  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1                            00100000
+*********************************************************************** 00110000
+         DFHMDF POS=(1,1),                                             X00120000
+               LENGTH=79,                                              X00130000
+               INITIAL='***********************************************X00140000
+               ********************************',                      X00150000
+               ATTRB=(ASKIP,PROT)                                       00160000
+         DFHMDF POS=(2,1),                                             X00170000
+               LENGTH=2,                                               X00180000
+               INITIAL='* ',                                           X00190000
+               ATTRB=(ASKIP,PROT)                                       00200000
+         DFHMDF POS=(2,3),                                             X00210000
+               LENGTH=08,                                              X00220000
+               INITIAL=' DATE : ',                                     X00230000
+               ATTRB=(ASKIP,PROT),COLOR=YELLOW                          00240000
+DATEJ    DFHMDF POS=(2,14),                                            X00250000
+               LENGTH=10,                                              X00260000
+               INITIAL=' ',                                            X00270000
+               ATTRB=(ASKIP,PROT,FSET)                                  00280000
+         DFHMDF POS=(2,24),                                            X00290000
+               LENGTH=06,                                              X00300000
+               INITIAL='PGM : ',COLOR=RED,                             X00310000
+               ATTRB=(ASKIP,PROT)                                       00320000
+PGMNAME  DFHMDF POS=(2,30),                                            X00330000
+               LENGTH=09,                                              X00340000
+               INITIAL=' ',COLOR=RED,                                  X00350000
+               ATTRB=(ASKIP,PROT,FSET)                                  00360000
+         DFHMDF POS=(2,39),                                            X00370000
+               LENGTH=07,                                              X00380000
+               INITIAL='TRANS: ',COLOR=RED,                            X00390000
+               ATTRB=(ASKIP,PROT)                                       00400000
+TRNNAME  DFHMDF POS=(2,46),                                            X00410000
+               LENGTH=07,                                              X00420000
+               INITIAL=' ',COLOR=RED,                                  X00430000
+               ATTRB=(ASKIP,PROT,FSET)                                  00440000
+         DFHMDF POS=(2,53),                                            X00450000
+               LENGTH=08,                                              X00460000
+               INITIAL='HEURE : ',                                     X00470000
+               ATTRB=(ASKIP,PROT),COLOR=YELLOW                          00480000
+HEURE    DFHMDF POS=(2,62),                                            X00490000
+               LENGTH=08,                                              X00500000
+               INITIAL=' ',                                            X00510000
+               ATTRB=(ASKIP,PROT,FSET)                                  00520000
+         DFHMDF POS=(2,79),                                            X00530000
+               LENGTH=1,INITIAL='*',                                   X00540000
+               ATTRB=(ASKIP,PROT)                                       00550000
+         DFHMDF POS=(3,1),                                             X00560000
+               LENGTH=79,                                              X00570000
+               INITIAL='***********************************************X00580000
+               ********************************',                      X00590000
+               ATTRB=(ASKIP,PROT)                                       00600000
+*********************************************************************** 00610000
+** INSTRUCTIONS                                                         00620000
+*********************************************************************** 00630000
+         DFHMDF POS=(05,1),                                            X00640000
+               LENGTH=40,                                              X00650000
+               INITIAL='SAISIR LOGIN ET MOT DE PASSE PUIS ENTER',      X00660000
+               COLOR=NEUTRAL,                                          X00670000
+               ATTRB=(ASKIP,PROT)                                       00680000
+*********************************************************************** 00690000
+** LOGIN                                                                00700000
+*********************************************************************** 00710000
+         DFHMDF POS=(07,1),                                            X00720000
+               LENGTH=20,                                              X00730000
+               INITIAL='LOGIN          :',                             X00740000
+               COLOR=GREEN,                                            X00750000
+               ATTRB=(ASKIP,PROT)                                       00760000
+LOGIN    DFHMDF POS=(07,22),                                           X00770000
+               LENGTH=02,                                              X00780000
+               ATTRB=(UNPROT,FSET,IC),                                 X00790000
+               VALIDN=(MUSTENTER),                                     X00800000
+               COLOR=TURQUOISE,                                        X00810000
+               INITIAL='__',                                           X00820000
+               PICIN='XX',                                             X00830000
+               PICOUT='XX'                                              00840000
+         DFHMDF POS=(07,25),                                           X00850000
+               LENGTH=01,                                              X00860000
+               ATTRB=(PROT,ASKIP)                                       00870000
+*********************************************************************** 00880000
+** PASSWORD                                                             00890000
+*********************************************************************** 00900000
+         DFHMDF POS=(09,1),                                            X00910000
+               LENGTH=20,                                              X00920000
+               INITIAL='MOT DE PASSE   :',                             X00930000
+               COLOR=GREEN,                                            X00940000
+               ATTRB=(ASKIP,PROT)                                       00950000
+PASSWD   DFHMDF POS=(09,22),                                           X00960000
+               LENGTH=20,                                              X00970000
+               ATTRB=(UNPROT,FSET),                                    X00980002
+               COLOR=TURQUOISE,                                        X00990000
+               INITIAL='____________________'                           01000000
+         DFHMDF POS=(09,43),                                           X01010000
+               LENGTH=01,                                              X01020000
+               ATTRB=(PROT,ASKIP)                                       01030000
+*********************************************************************** 01040000
+** BAS DE PAGE                                                          01050000
+*********************************************************************** 01060000
+         DFHMDF POS=(17,1),                                            X01070000
+               LENGTH=79,                                              X01080000
+               INITIAL='***********************************************X01090000
+               ********************************',                      X01100000
+               ATTRB=(ASKIP,PROT)                                       01110000
+         DFHMDF POS=(18,1),                                            X01120000
+               LENGTH=78,                                              X01130000
+               INITIAL='* ESC:FIN   ENTER:VALIDER',                    X01140000
+               ATTRB=(ASKIP,PROT)                                       01150000
+         DFHMDF POS=(18,79),                                           X01160000
+               LENGTH=1,                                               X01170000
+               INITIAL='*',                                            X01180000
+               ATTRB=(ASKIP,PROT)                                       01190000
+         DFHMDF POS=(19,1),                                            X01200000
+               LENGTH=12,                                              X01210000
+               INITIAL='* MESSAGE : ',                                 X01220000
+               ATTRB=(ASKIP,PROT)                                       01230000
+MESS1    DFHMDF POS=(19,14),                                           X01240000
+               LENGTH=55,                                              X01250000
+               ATTRB=(ASKIP,PROT,BRT)                                   01260000
+         DFHMDF POS=(19,79),                                           X01270000
+               LENGTH=1,                                               X01280000
+               INITIAL='*',                                            X01290000
+               ATTRB=(ASKIP,PROT)                                       01300000
+         DFHMDF POS=(21,1),                                            X01310000
+               LENGTH=79,                                              X01320000
+               INITIAL='***********************************************X01330000
+               ********************************',                      X01340000
+               ATTRB=(ASKIP,PROT)                                       01350000
+         DFHMSD TYPE=FINAL                                              01360000
+         END                                                            01370000

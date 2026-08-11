@@ -1,0 +1,158 @@
+       ID DIVISION.
+       PROGRAM-ID.    P5LOG.
+
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+            COPY DFHBMSCA.
+            COPY DFHAID.
+            COPY MS3LOG.
+
+       77 WS-TEMPS      PIC S9(15) COMP-3.
+       77 WS-CD-ERR     PIC S9(8)  COMP.
+       77 WS-ERR-MESS   PIC X(50)  VALUE 'BYE !'.
+
+       01 ENR-USER.
+          05 US-LOGIN    PIC XX.
+          05 US-PASSWD   PIC X(20).
+          05 FILLER      PIC X(58).
+
+       01 ZONE.
+          05 PGM-CURR    PIC X(08) VALUE 'P5LOG'.
+          05 TRN-CURR    PIC X(04) VALUE 'T3LG'.
+          05 RES-CH      PIC X(58).
+
+       LINKAGE SECTION.
+       01 DFHCOMMAREA   PIC X(70).
+
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+
+             EVALUATE EIBTRNID
+              WHEN 'T3LG'
+                IF EIBCALEN = ZERO OR EIBAID = DFHPF5
+                   MOVE LOW-VALUE TO MAP3LOGO
+                   PERFORM ENVOI-ECRAN
+                END-IF
+
+                IF EIBAID = DFHCLEAR
+                   MOVE 'FIN !' TO WS-ERR-MESS
+                   PERFORM FIN-TOTALE
+                END-IF
+
+                IF EIBAID = DFHENTER
+                   PERFORM LECT-ECRAN
+                   PERFORM TRT-LOGIN
+                END-IF
+
+                IF EIBAID NOT EQUAL DFHCLEAR AND
+                   EIBAID NOT EQUAL DFHENTER AND
+                   EIBAID NOT EQUAL DFHPF5
+                   MOVE LOW-VALUE TO MAP3LOGO
+                   MOVE 'TOUCHE INVALIDE !' TO MESS1O
+                   MOVE DFHPINK             TO MESS1C
+                END-IF
+               WHEN OTHER
+                   CONTINUE
+             END-EVALUATE
+             PERFORM ENVOI-ECRAN.
+
+       ENVOI-ECRAN.
+      *****************************************************************
+      * CONSTITUTION ENTETE
+      *****************************************************************
+           MOVE EIBTRNID  TO TRNNAMEO
+           MOVE PGM-CURR  TO PGMNAMEO
+
+           EXEC CICS    ASKTIME ABSTIME(WS-TEMPS)    END-EXEC
+           EXEC CICS
+                 FORMATTIME ABSTIME (WS-TEMPS)
+                 DDMMYY (DATEJO)
+                 DATESEP ('/')
+                 TIME (HEUREO)
+                 TIMESEP (':')
+           END-EXEC
+
+      *****************************************************************
+      * ENVOI DE LA MAP A AFFICHER
+      *****************************************************************
+           EXEC CICS
+                 SEND MAP ('MAP3LOG')
+                 MAPSET ('MS3LOG')
+                 RESP (WS-CD-ERR)
+                 ERASE
+                 CURSOR
+                 WAIT
+           END-EXEC
+
+           IF WS-CD-ERR NOT EQUAL DFHRESP(NORMAL)
+              MOVE 'ERR SEND'  TO WS-ERR-MESS
+              PERFORM FIN-TOTALE
+           END-IF
+
+           EXEC CICS
+                RETURN TRANSID ('T3LG')
+                COMMAREA (ZONE)
+                LENGTH (LENGTH OF ZONE)
+           END-EXEC.
+
+       LECT-ECRAN.
+           EXEC CICS
+                 RECEIVE MAP ('MAP3LOG')
+                 MAPSET ('MS3LOG')
+                 RESP (WS-CD-ERR)
+           END-EXEC
+
+           IF WS-CD-ERR NOT EQUAL DFHRESP(NORMAL)
+              MOVE 'ERR RECEIVE'  TO WS-ERR-MESS
+              PERFORM FIN-TOTALE
+           END-IF.
+
+       TRT-LOGIN.
+           IF LOGINI IS NOT EQUAL TO SPACE AND LOW-VALUE
+              EXEC CICS
+                  READ DATASET ('USERS3')
+                  RIDFLD (LOGINI)
+                  INTO (ENR-USER)
+                  RESP (WS-CD-ERR)
+              END-EXEC
+              EVALUATE WS-CD-ERR
+                 WHEN ZERO
+                    PERFORM VERIF-PASSWD
+                 WHEN 13
+                    MOVE 'LOGIN INEXISTANT !' TO MESS1O
+                    MOVE DFHRED  TO MESS1C
+                 WHEN OTHER
+                    MOVE 'ERR READ USERS3 !' TO MESS1O
+      *             MOVE WS-CD-ERR TO MESS1O(23:4)
+      *             MOVE DFHRED TO MESS1C
+                    PERFORM FIN-TOTALE
+              END-EVALUATE
+           ELSE
+              MOVE 'LOGIN MANQUANT !' TO MESS1O
+              MOVE DFHRED  TO MESS1C
+           END-IF.
+
+       VERIF-PASSWD.
+      *    MOVE PASSWDI TO MESS1O
+      *    MOVE DFHRED TO MESS1C.
+           INSPECT PASSWDI REPLACING ALL '_' BY ' '
+           IF FUNCTION UPPER-CASE(PASSWDI) =
+              FUNCTION UPPER-CASE(US-PASSWD)
+
+              MOVE 'AUTHENTIFICATION REUSSIE !' TO MESS1O
+              MOVE DFHGREEN TO MESS1C
+           ELSE
+              MOVE 'MOT DE PASSE INCORRECT !' TO MESS1O
+              MOVE DFHRED   TO MESS1C
+           END-IF.
+
+       FIN-TOTALE.
+           EXEC CICS
+                 SEND FROM (WS-ERR-MESS)
+                 LENGTH (LENGTH OF WS-ERR-MESS)
+                 RESP (WS-CD-ERR)
+                 ERASE
+                 WAIT
+           END-EXEC
+           EXEC CICS    RETURN   END-EXEC.
+
