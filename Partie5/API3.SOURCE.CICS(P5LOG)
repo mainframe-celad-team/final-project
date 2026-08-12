@@ -20,7 +20,8 @@
        01 ZONE.
           05 PGM-CURR    PIC X(08) VALUE 'P5LOG'.
           05 TRN-CURR    PIC X(04) VALUE 'T3LG'.
-          05 RES-CH      PIC X(58).
+          05 CO-USER     PIC X(02).
+          05 RES-CH      PIC X(56).
 
        LINKAGE SECTION.
        01 DFHCOMMAREA   PIC X(70).
@@ -52,7 +53,8 @@
                    MOVE DFHPINK             TO MESS1C
                 END-IF
                WHEN OTHER
-                   CONTINUE
+                   MOVE LOW-VALUE TO MAP3LOGO
+                   PERFORM ENVOI-ECRAN
              END-EVALUATE
              PERFORM ENVOI-ECRAN.
 
@@ -139,12 +141,27 @@
            IF FUNCTION UPPER-CASE(PASSWDI) =
               FUNCTION UPPER-CASE(US-PASSWD)
 
-              MOVE 'AUTHENTIFICATION REUSSIE !' TO MESS1O
-              MOVE DFHGREEN TO MESS1C
+              MOVE LOGINI TO CO-USER
+              PERFORM BASCULE-AJOUT
+
+      *       MOVE 'AUTHENTIFICATION REUSSIE !' TO MESS1O
+      *       MOVE DFHGREEN TO MESS1C
            ELSE
               MOVE 'MOT DE PASSE INCORRECT !' TO MESS1O
               MOVE DFHRED   TO MESS1C
            END-IF.
+
+       BASCULE-AJOUT.
+           EXEC CICS
+                 XCTL PROGRAM ('P5ADD')
+                 COMMAREA (ZONE)
+                 LENGTH (LENGTH OF ZONE)
+                 RESP (WS-CD-ERR)
+            END-EXEC
+            IF WS-CD-ERR NOT EQUAL DFHRESP(NORMAL)
+                 MOVE 'ERR XCTL P5ADD'  TO WS-ERR-MESS
+                 PERFORM FIN-TOTALE
+            END-IF.
 
        FIN-TOTALE.
            EXEC CICS
