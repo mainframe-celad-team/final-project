@@ -1,0 +1,50 @@
+      ******************************************************************
+      * DCLGEN TABLE(API3.PARTS)                                       *
+      *        LIBRARY(API3.SOURCE.DCLGEN(PARTS))                      *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(PA-)                                              *
+      *        STRUCTURE(ST-PARTS)                                     *
+      *        QUOTE                                                   *
+      *        COLSUFFIX(YES)                                          *
+      *        INDVAR(YES)                                             *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API3.PARTS TABLE
+           ( PNO                            CHAR(2) NOT NULL,
+             PNAME                          VARCHAR(30) NOT NULL,
+             COLOR                          VARCHAR(20),
+             WEIGHT                         DECIMAL(2, 0),
+             CITY                           VARCHAR(20)
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API3.PARTS                         *
+      ******************************************************************
+       01  ST-PARTS.
+      *                       PNO
+           10 PA-PNO               PIC X(2).
+           10 PA-PNAME.
+      *                       PNAME LENGTH
+              49 PA-PNAME-LEN      PIC S9(4) USAGE COMP.
+      *                       PNAME
+              49 PA-PNAME-TEXT     PIC X(30).
+           10 PA-COLOR.
+      *                       COLOR LENGTH
+              49 PA-COLOR-LEN      PIC S9(4) USAGE COMP.
+      *                       COLOR
+              49 PA-COLOR-TEXT     PIC X(20).
+      *                       WEIGHT
+           10 PA-WEIGHT            PIC S9(2)V USAGE COMP-3.
+           10 PA-CITY.
+      *                       CITY LENGTH
+              49 PA-CITY-LEN       PIC S9(4) USAGE COMP.
+      *                       CITY
+              49 PA-CITY-TEXT      PIC X(20).
+      ******************************************************************
+      * INDICATOR VARIABLE STRUCTURE                                   *
+      ******************************************************************
+       01  IPARTS.
+           10 INDSTRUC           PIC S9(4) USAGE COMP OCCURS 5 TIMES.
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 5       *
+      ******************************************************************
