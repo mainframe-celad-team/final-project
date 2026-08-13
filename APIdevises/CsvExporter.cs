@@ -13,16 +13,8 @@ namespace APIdevises
 
         protected override string GenererContenu(List<Cotation> cotations)
         {
-            
-          string data=  CsvSerializer.SerializeToCsv(cotations);
-
+            string data = CsvSerializer.SerializeToCsv(cotations);
             return data;
-
-
-
-
-
-
         }
     }
 }
