@@ -13,15 +13,19 @@ internal class Program
 
         string baseUrl = config["Frankfurter:BaseUrl"]
             ?? throw new InvalidOperationException("Configuration manquante : Frankfurter:BaseUrl");
+        string outputPath = config["Export:OutputPath"] ?? "export";
 
         var client = new FrankfurterClient(baseUrl);
         var mapper = new CotationMapper();
-        var exporters = Assembly.GetExecutingAssembly()
-            .GetTypes()
-            .Where(t => t.IsSubclassOf(typeof(Exporter)) && !t.IsAbstract)
-            .Select(t => (Exporter)Activator.CreateInstance(t)!)
-            .ToList();
-        var orchestrator = new ExportOrchestrator(client, mapper, exporters);
+        var exporters = new List<Exporter>
+        {
+            new JsonExporter(),
+            new XmlExporter(),
+            new CSVExporter(),
+            new TSOExporter()
+        };
+
+        var orchestrator = new ExportOrchestrator(client, mapper, exporters, outputPath);
         await orchestrator.RunOrchestratorAsync();
     }
 }

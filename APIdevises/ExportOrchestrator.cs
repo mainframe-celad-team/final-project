@@ -11,15 +11,19 @@ namespace APIdevises
         private readonly FrankfurterClient _client;
         private readonly CotationMapper _mapper;
         private readonly List<Exporter> _exporters;
+        private readonly string _outputPath;
 
         public ExportOrchestrator(
             FrankfurterClient client,
             CotationMapper mapper,
-            List<Exporter> exporters)
+            List<Exporter> exporters,
+            string outputPath
+            )
         {
             _client = client;
             _mapper = mapper;
             _exporters = exporters;
+            _outputPath = outputPath;
         }
         public async Task RunOrchestratorAsync()
         {
@@ -46,7 +50,7 @@ namespace APIdevises
 
             foreach (var exporter in exportersChoisis)
             {
-                exporter.ExporterVersFichier(cotations, dateExecution);
+                exporter.ExporterVersFichier(cotations, dateExecution, _outputPath);
             }
         }
     }
