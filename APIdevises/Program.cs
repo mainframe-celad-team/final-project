@@ -18,7 +18,9 @@ internal class Program
         var exporters = new List<Exporter>
         {
             new JsonExporter(),
-            new XmlExporter()
+            new XmlExporter(),
+            new CSVExporter()
+             
         };
 
         var orchestrator = new ExportOrchestrator(client, mapper, exporters);
