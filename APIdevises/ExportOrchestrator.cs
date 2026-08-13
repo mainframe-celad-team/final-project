@@ -44,7 +44,7 @@ namespace APIdevises
             
             DateOnly dateExecution = DateOnly.FromDateTime(DateTime.Now);
 
-            foreach (var exporter in _exporters)
+            foreach (var exporter in exportersChoisis)
             {
                 exporter.ExporterVersFichier(cotations, dateExecution);
             }
