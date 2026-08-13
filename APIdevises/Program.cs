@@ -1,4 +1,5 @@
-﻿using APIdevises;
+﻿using System.Reflection;
+using APIdevises;
 using Microsoft.Extensions.Configuration;
 
 internal class Program
@@ -15,14 +16,11 @@ internal class Program
 
         var client = new FrankfurterClient(baseUrl);
         var mapper = new CotationMapper();
-        var exporters = new List<Exporter>
-        {
-            new JsonExporter(),
-            new XmlExporter(),
-            new CSVExporter()
-             
-        };
-
+        var exporters = Assembly.GetExecutingAssembly()
+            .GetTypes()
+            .Where(t => t.IsSubclassOf(typeof(Exporter)) && !t.IsAbstract)
+            .Select(t => (Exporter)Activator.CreateInstance(t)!)
+            .ToList();
         var orchestrator = new ExportOrchestrator(client, mapper, exporters);
         await orchestrator.RunOrchestratorAsync();
     }
