@@ -1,0 +1,64 @@
+//JCVENTE1  JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//*
+//*----------------------------------------------------------------*
+//* JOB DE COMPILATION / BIND / EXECUTION DE PRJVENTE (PARTIE 2)    *
+//* Copie/adapte de JCDB2PJ (qui fonctionne pour PRJFINAL/PJFIN)    *
+//*----------------------------------------------------------------*
+//*
+//*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*
+//*   CETTE PROCEDURE CONTIENT 5 STEPS :                            *
+//*        ======> SI RE-EXECUTION FAIRE RESTART AU "STEPRUN"       *
+//*                                                                  *
+//*        1/  PRECOMPILE  DB2                                      *
+//*        2/  COMPILE COBOL II                                     *
+//*        3/  LINKEDIT  (DANS FORM.CICS.LOAD)                      *
+//*        4/  BIND PLAN PARTIR DE APIXX.SOURCE.DBRMLIB              *
+//*        5/  EXECUTE DU PROGRAMME                                 *
+//*   LES  PROCEDURES  SE TROUVENT DANS SDJ.FORM.PROCLIB             *
+//*                                                                  *
+//*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*
+//PROCLIB   JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API1,
+//             NOMPGM=PRJVENTE
+//*
+//APPROC    EXEC COMPDB2
+//STEPDB2.SYSLIB   DD DSN=&SYSUID..SOURCE.DCLGEN,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=&SYSUID..SOURCE.DB2(&NOMPGM),DISP=SHR
+//STEPDB2.DBRMLIB DD DSN=&SYSUID..SOURCE.DBRMLIB(&NOMPGM),DISP=SHR
+//STEPLNK.SYSLMOD    DD DSN=&SYSUID..SOURCE.PGMLIB(&NOMPGM),DISP=SHR
+//STEPLNK.SYSLIB   DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//                 DD DSN=CICSTS22.CICS.SDFHEXCI,DISP=SHR
+//                 DD DSN=CICSTS22.CICS.SDFHLOAD,DISP=SHR
+//                 DD DSN=DSN710.SDSNLOAD,DISP=SHR
+//                 DD DSN=CEE.SCEECICS,DISP=SHR
+//                 DD DSN=CEE.SCEELKED,DISP=SHR
+//*
+//*--- ETAPE DE BIND ------------------------------------------------
+//*
+//BIND      EXEC PGM=IKJEFT01,COND=(4,LT)
+//DBRMLIB DD  DSN=&SYSUID..SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN     (PRJVENTE) -
+       QUALIFIER (API1)   -
+       ACTION    (REPLACE) -
+       MEMBER    (PRJVENTE) -
+       VALIDATE  (BIND)   -
+       ISOLATION (CS)     -
+       ACQUIRE   (USE)    -
+       RELEASE   (COMMIT) -
+       EXPLAIN   (NO)
+/*
+//STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
+//VENTESEU DD DSN=API1.PROJET.VENTESEU.DATA,DISP=SHR
+//VENTESAS DD DSN=API1.PROJET.VENTESAS.DATA,DISP=SHR
+//VENTEERR DD DSN=API1.PROJET.VENTEERR.DATA,DISP=SHR
+//STEPLIB  DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(PRJVENTE) PLAN (PRJVENTE)
+/*

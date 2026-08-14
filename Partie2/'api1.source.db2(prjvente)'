@@ -1,0 +1,516 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.    PRJVENTE.
+
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+           SELECT FIC-VENTESEU
+               ASSIGN TO VENTESEU
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS MODE IS SEQUENTIAL
+               FILE STATUS IS WS-FS-VENTESEU.
+
+           SELECT FIC-VENTESAS
+               ASSIGN TO VENTESAS
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS MODE IS SEQUENTIAL
+               FILE STATUS IS WS-FS-VENTESAS.
+
+           SELECT FIC-ERROR
+               ASSIGN TO VENTEERR
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS MODE IS SEQUENTIAL
+               FILE STATUS IS WS-FS-ERROR.
+
+       DATA DIVISION.
+       FILE SECTION.
+
+      *********************************************
+      * FICHIER DES VENTES EUROPE
+      *********************************************
+       FD FIC-VENTESEU.
+       01 ENR-VENTESEU.
+          05 EV-NO-COMMANDE     PIC X(03).
+          05 EV-DATE-COMMANDE   PIC X(10).
+          05 EV-NO-EMPLOYE      PIC X(02).
+          05 EV-NO-CLIENT       PIC X(04).
+          05 EV-NO-PRODUIT      PIC X(03).
+          05 EV-PRIX            PIC X(05).
+          05 EV-QUANTITE        PIC X(02).
+          05 EV-RESERVE         PIC X(06).
+
+      *********************************************
+      * FICHIER DES VENTES ASIE (meme structure)
+      *********************************************
+       FD FIC-VENTESAS.
+       01 ENR-VENTESAS.
+          05 AV-NO-COMMANDE     PIC X(03).
+          05 AV-DATE-COMMANDE   PIC X(10).
+          05 AV-NO-EMPLOYE      PIC X(02).
+          05 AV-NO-CLIENT       PIC X(04).
+          05 AV-NO-PRODUIT      PIC X(03).
+          05 AV-PRIX            PIC X(05).
+          05 AV-QUANTITE        PIC X(02).
+          05 AV-RESERVE         PIC X(06).
+
+      *********************************************
+      * FICHIER DES ERREURS
+      *********************************************
+       FD FIC-ERROR.
+       01 ENR-ERROR.
+          05 LIGNE-ERROR        PIC X(90).
+
+       WORKING-STORAGE SECTION.
+
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+
+           EXEC SQL
+                INCLUDE PRODUCTS
+           END-EXEC.
+
+           EXEC SQL
+                INCLUDE ORDERS
+           END-EXEC.
+
+           EXEC SQL
+                INCLUDE ITEMS
+           END-EXEC.
+
+           EXEC SQL
+                INCLUDE CUSTOMER
+           END-EXEC.
+
+       77 ED-SQLCODE            PIC +9(9).
+
+       01 WS-DATE-SQL            PIC X(10).
+
+       01 WS-S-NO-DB             PIC S9(2)   COMP-3.
+       01 WS-C-NO-DB             PIC S9(4)   COMP-3.
+       01 WS-DATE-DB             PIC X(10).
+
+       01 WS-MONTANT             PIC S9(7)V99 COMP-3.
+
+      *********************************
+      * FILE STATUS
+      *********************************
+       01 WS-FS-VENTESEU        PIC XX.
+       01 WS-FS-VENTESAS        PIC XX.
+       01 WS-FS-ERROR           PIC XX.
+
+      *********************************
+      * FIN DE FICHIER
+      *********************************
+       01 WS-FIN-EU              PIC X VALUE 'N'.
+          88 FIN-EU              VALUE 'O'.
+       01 WS-FIN-AS              PIC X VALUE 'N'.
+          88 FIN-AS              VALUE 'O'.
+
+       01 WS-VENTE.
+          05 WS-NO-COMMANDE-TXT   PIC X(03).
+          05 WS-DATE-COMMANDE-TXT PIC X(10).
+          05 WS-NO-EMPLOYE-TXT    PIC X(02).
+          05 WS-NO-CLIENT-TXT     PIC X(04).
+          05 WS-NO-PRODUIT        PIC X(03).
+          05 WS-PRIX-TXT          PIC X(05).
+          05 WS-PRIX-NUM REDEFINES WS-PRIX-TXT PIC 9(03)V99.
+          05 WS-QUANTITE-TXT      PIC X(02).
+          05 WS-RESERVE           PIC X(06).
+
+       01 WS-NO-COMMANDE-NUM    PIC 9(03).
+       01 WS-NO-EMPLOYE-NUM     PIC 9(02).
+       01 WS-NO-CLIENT-NUM      PIC 9(04).
+       01 WS-QUANTITE-NUM       PIC 9(02).
+       01 WS-PRIX-VENTE         PIC 9(03)V99.
+       01 WS-PRIX-OK            PIC X VALUE 'N'.
+          88 PRIX-FOURNI        VALUE 'O'.
+          88 PRIX-ABSENT        VALUE 'N'.
+
+       01 WS-I                  PIC 99.
+
+      *********************************
+      * GESTION DES ERREURS
+      *********************************
+       01 WS-ERREUR             PIC X VALUE 'N'.
+          88 ERREUR             VALUE 'O'.
+          88 PAS-ERREUR         VALUE 'N'.
+
+       01 WS-MOTIF-ERREUR       PIC X(50).
+
+      *********************************
+      * COMPTEURS
+      *********************************
+       01 WS-NB-LUS             PIC 9(5) VALUE ZERO.
+       01 WS-NB-VENTES-OK       PIC 9(5) VALUE ZERO.
+       01 WS-NB-ERREUR          PIC 9(5) VALUE ZERO.
+
+       PROCEDURE DIVISION.
+
+       DEBUT-PROGRAMME.
+
+           PERFORM INITIALISATION
+           PERFORM OUVRIR-FICHIERS
+
+           PERFORM TRAITER-FICHIER-EU
+           PERFORM TRAITER-FICHIER-AS
+
+           PERFORM FERMER-FICHIERS
+           PERFORM VALIDATION
+           STOP RUN.
+
+       INITIALISATION.
+
+           MOVE ZERO TO WS-NB-LUS
+                        WS-NB-VENTES-OK
+                        WS-NB-ERREUR
+           MOVE 'N' TO WS-FIN-EU
+           MOVE 'N' TO WS-FIN-AS.
+
+       OUVRIR-FICHIERS.
+
+           OPEN INPUT  FIC-VENTESEU
+                       FIC-VENTESAS
+                OUTPUT FIC-ERROR.
+
+           IF WS-FS-VENTESEU NOT = '00'
+              DISPLAY 'ERREUR OUVERTURE VENTESEU : '
+                      WS-FS-VENTESEU
+              STOP RUN
+           END-IF
+
+           IF WS-FS-VENTESAS NOT = '00'
+              DISPLAY 'ERREUR OUVERTURE VENTESAS : '
+                      WS-FS-VENTESAS
+              STOP RUN
+           END-IF
+
+           IF WS-FS-ERROR NOT = '00'
+              DISPLAY 'ERREUR OUVERTURE VENTEERR : '
+                      WS-FS-ERROR
+              STOP RUN
+           END-IF.
+
+       TRAITER-FICHIER-EU.
+
+           PERFORM LIRE-VENTESEU
+
+           PERFORM UNTIL FIN-EU
+               MOVE ENR-VENTESEU TO WS-VENTE
+               PERFORM TRAITER-ENREGISTREMENT
+               PERFORM LIRE-VENTESEU
+           END-PERFORM.
+
+       LIRE-VENTESEU.
+           READ FIC-VENTESEU
+
+           AT END
+               SET FIN-EU TO TRUE
+
+           NOT AT END
+               ADD 1 TO WS-NB-LUS
+
+           END-READ.
+
+       TRAITER-FICHIER-AS.
+
+           PERFORM LIRE-VENTESAS
+
+           PERFORM UNTIL FIN-AS
+               MOVE ENR-VENTESAS TO WS-VENTE
+               PERFORM TRAITER-ENREGISTREMENT
+               PERFORM LIRE-VENTESAS
+           END-PERFORM.
+
+       LIRE-VENTESAS.
+           READ FIC-VENTESAS
+
+           AT END
+               SET FIN-AS TO TRUE
+
+           NOT AT END
+               ADD 1 TO WS-NB-LUS
+
+           END-READ.
+
+       TRAITER-ENREGISTREMENT.
+
+           PERFORM CONTROLER-DONNEES
+
+           IF PAS-ERREUR
+               PERFORM RECHERCHER-PRODUIT
+           END-IF
+
+           IF PAS-ERREUR
+               PERFORM DETERMINER-PRIX
+           END-IF
+
+           IF PAS-ERREUR
+               PERFORM CONTROLER-STOCK
+           END-IF
+
+           IF PAS-ERREUR
+               PERFORM TRAITER-COMMANDE
+           END-IF
+
+           IF PAS-ERREUR
+               PERFORM INSERER-LIGNE-VENTE
+           END-IF
+
+           IF ERREUR
+               PERFORM ECRIRE-ERREUR
+           END-IF.
+
+       CONTROLER-DONNEES.
+
+           SET PAS-ERREUR TO TRUE
+           MOVE SPACES TO WS-MOTIF-ERREUR
+
+           IF WS-NO-COMMANDE-TXT IS NOT NUMERIC
+              SET ERREUR TO TRUE
+              MOVE 'N0 COMMANDE NON NUMERIQUE'
+                   TO WS-MOTIF-ERREUR
+           END-IF
+
+           IF PAS-ERREUR
+              IF WS-NO-EMPLOYE-TXT IS NOT NUMERIC
+                 SET ERREUR TO TRUE
+                 MOVE 'N0 EMPLOYE NON NUMERIQUE'
+                      TO WS-MOTIF-ERREUR
+              END-IF
+           END-IF
+
+           IF PAS-ERREUR
+              IF WS-NO-CLIENT-TXT IS NOT NUMERIC
+                 SET ERREUR TO TRUE
+                 MOVE 'N0 CLIENT NON NUMERIQUE'
+                      TO WS-MOTIF-ERREUR
+              END-IF
+           END-IF
+
+           IF PAS-ERREUR
+              IF WS-NO-PRODUIT = SPACES
+                 SET ERREUR TO TRUE
+                 MOVE 'N0 PRODUIT VIDE'
+                      TO WS-MOTIF-ERREUR
+              END-IF
+           END-IF
+
+           IF PAS-ERREUR
+              IF WS-QUANTITE-TXT IS NOT NUMERIC
+                 SET ERREUR TO TRUE
+                 MOVE 'QUANTITE NON NUMERIQUE'
+                      TO WS-MOTIF-ERREUR
+              ELSE
+                 IF WS-QUANTITE-TXT = ZERO
+                    SET ERREUR TO TRUE
+                    MOVE 'QUANTITE NULLE'
+                         TO WS-MOTIF-ERREUR
+                 END-IF
+              END-IF
+           END-IF
+
+           IF PAS-ERREUR
+              IF WS-DATE-COMMANDE-TXT(3:1) NOT = '/' OR
+                 WS-DATE-COMMANDE-TXT(6:1) NOT = '/'
+                 SET ERREUR TO TRUE
+                 MOVE 'DATE COMMANDE INVALIDE (JJ/MM/AAAA)'
+                      TO WS-MOTIF-ERREUR
+              END-IF
+           END-IF
+
+           IF PAS-ERREUR
+              MOVE WS-NO-COMMANDE-TXT TO WS-NO-COMMANDE-NUM
+              MOVE WS-NO-EMPLOYE-TXT  TO WS-NO-EMPLOYE-NUM
+              MOVE WS-NO-CLIENT-TXT   TO WS-NO-CLIENT-NUM
+              MOVE WS-QUANTITE-TXT    TO WS-QUANTITE-NUM
+
+      *       Conversion JJ/MM/AAAA (texte) -> AAAA-MM-JJ (SQL)
+              MOVE WS-DATE-COMMANDE-TXT(7:4) TO WS-DATE-SQL(1:4)
+              MOVE '-'                       TO WS-DATE-SQL(5:1)
+              MOVE WS-DATE-COMMANDE-TXT(4:2) TO WS-DATE-SQL(6:2)
+              MOVE '-'                       TO WS-DATE-SQL(8:1)
+              MOVE WS-DATE-COMMANDE-TXT(1:2) TO WS-DATE-SQL(9:2)
+
+      *       Le prix est-il fourni et numerique ?
+              SET PRIX-ABSENT TO TRUE
+              IF WS-PRIX-TXT NOT = SPACES
+                 IF WS-PRIX-TXT IS NUMERIC
+                    SET PRIX-FOURNI TO TRUE
+                 END-IF
+              END-IF
+           END-IF.
+
+       RECHERCHER-PRODUIT.
+
+           MOVE WS-NO-PRODUIT TO PRD-P-NO
+
+           EXEC SQL
+                SELECT PRICE, STOCK
+                  INTO :PRD-PRICE, :PRD-STOCK
+                  FROM API1.PRODUCTS
+                 WHERE P_NO = :PRD-P-NO
+           END-EXEC
+
+           EVALUATE SQLCODE
+               WHEN ZERO
+                   CONTINUE
+               WHEN 100
+                   SET ERREUR TO TRUE
+                   MOVE 'PRODUIT INCONNU'
+                        TO WS-MOTIF-ERREUR
+               WHEN OTHER
+                   PERFORM TEST-SQLCODE
+           END-EVALUATE.
+
+       DETERMINER-PRIX.
+
+           IF PRIX-FOURNI
+              MOVE WS-PRIX-NUM TO WS-PRIX-VENTE
+           ELSE
+              MOVE PRD-PRICE TO WS-PRIX-VENTE
+           END-IF.
+
+       CONTROLER-STOCK.
+
+           IF WS-QUANTITE-NUM > PRD-STOCK
+              SET ERREUR TO TRUE
+              MOVE 'STOCK INSUFFISANT'
+                   TO WS-MOTIF-ERREUR
+           END-IF.
+
+       TRAITER-COMMANDE.
+
+           MOVE WS-NO-COMMANDE-NUM TO ORD-O-NO
+
+           EXEC SQL
+                SELECT S_NO, C_NO, O_DATE
+                  INTO :WS-S-NO-DB, :WS-C-NO-DB, :WS-DATE-DB
+                  FROM API1.ORDERS
+                 WHERE O_NO = :ORD-O-NO
+           END-EXEC
+
+           EVALUATE SQLCODE
+               WHEN ZERO
+                   IF WS-S-NO-DB  NOT = WS-NO-EMPLOYE-NUM OR
+                      WS-C-NO-DB  NOT = WS-NO-CLIENT-NUM  OR
+                      WS-DATE-DB  NOT = WS-DATE-SQL
+                      SET ERREUR TO TRUE
+                      MOVE 'COMMANDE INCOHERENTE (CLIENT/EMPLOYE/DATE)'
+                           TO WS-MOTIF-ERREUR
+                   END-IF
+               WHEN 100
+                   PERFORM INSERER-COMMANDE
+               WHEN OTHER
+                   PERFORM TEST-SQLCODE
+           END-EVALUATE.
+
+       INSERER-COMMANDE.
+
+           MOVE WS-NO-EMPLOYE-NUM TO ORD-S-NO
+           MOVE WS-NO-CLIENT-NUM  TO ORD-C-NO
+           MOVE WS-DATE-SQL       TO ORD-O-DATE
+
+           EXEC SQL
+                INSERT INTO API1.ORDERS
+                       (O_NO, S_NO, C_NO, O_DATE)
+                VALUES (:ORD-O-NO, :ORD-S-NO, :ORD-C-NO, :ORD-O-DATE)
+           END-EXEC
+
+           PERFORM TEST-SQLCODE.
+
+       INSERER-LIGNE-VENTE.
+
+           MOVE WS-NO-COMMANDE-NUM TO ITM-O-NO
+           MOVE WS-NO-PRODUIT      TO ITM-P-NO
+           MOVE WS-QUANTITE-NUM    TO ITM-QUANTITY
+           MOVE WS-PRIX-VENTE      TO ITM-PRICE
+
+           EXEC SQL
+                INSERT INTO API1.ITEMS
+                       (O_NO, P_NO, QUANTITY, PRICE)
+                VALUES (:ITM-O-NO, :ITM-P-NO, :ITM-QUANTITY, :ITM-PRICE)
+           END-EXEC
+
+           EVALUATE TRUE
+               WHEN SQLCODE = ZERO
+                   PERFORM MAJ-STOCK-ET-SOLDE
+                   ADD 1 TO WS-NB-VENTES-OK
+               WHEN SQLCODE = -803
+                   SET ERREUR TO TRUE
+                   MOVE 'PRODUIT DEJA PRESENT DANS CETTE COMMANDE'
+                        TO WS-MOTIF-ERREUR
+               WHEN OTHER
+                   PERFORM TEST-SQLCODE
+           END-EVALUATE.
+
+       MAJ-STOCK-ET-SOLDE.
+
+           EXEC SQL
+                UPDATE API1.PRODUCTS
+                   SET STOCK = STOCK - :ITM-QUANTITY
+                 WHERE P_NO = :ITM-P-NO
+           END-EXEC
+
+           PERFORM TEST-SQLCODE
+
+           COMPUTE WS-MONTANT = WS-PRIX-VENTE * WS-QUANTITE-NUM
+
+           MOVE WS-NO-CLIENT-NUM TO CTM-C-NO
+
+           EXEC SQL
+                UPDATE API1.CUSTOMERS
+                   SET BALANCE = BALANCE + :WS-MONTANT
+                 WHERE C_NO = :CTM-C-NO
+           END-EXEC
+
+           PERFORM TEST-SQLCODE.
+
+       TEST-SQLCODE.
+           IF SQLCODE NOT = ZERO
+              MOVE SQLCODE TO ED-SQLCODE
+              DISPLAY 'ERREUR SQL - SQLCODE : ' ED-SQLCODE
+              PERFORM ABEND-PROG
+           END-IF.
+
+       ABEND-PROG.
+           DISPLAY '*** ABEND PRJVENTE - SQLCODE : ' ED-SQLCODE
+           DISPLAY '*** LUS=' WS-NB-LUS
+                   ' OK=' WS-NB-VENTES-OK
+                   ' ERREURS=' WS-NB-ERREUR
+           EXEC SQL
+               ROLLBACK
+           END-EXEC
+           STOP RUN.
+
+       ECRIRE-ERREUR.
+           MOVE SPACES TO LIGNE-ERROR
+           STRING WS-VENTE          DELIMITED BY SIZE
+                  ' | '             DELIMITED BY SIZE
+                  WS-MOTIF-ERREUR   DELIMITED BY SIZE
+               INTO LIGNE-ERROR
+           END-STRING
+
+           WRITE ENR-ERROR
+           ADD 1 TO WS-NB-ERREUR.
+
+       VALIDATION.
+           EXEC SQL
+               COMMIT
+           END-EXEC
+           PERFORM TEST-SQLCODE.
+
+       FERMER-FICHIERS.
+           CLOSE FIC-VENTESEU
+                 FIC-VENTESAS
+                 FIC-ERROR
+
+           DISPLAY 'NB LUS      : ' WS-NB-LUS
+           DISPLAY 'NB VENTES OK: ' WS-NB-VENTES-OK
+           DISPLAY 'NB ERREURS  : ' WS-NB-ERREUR.
