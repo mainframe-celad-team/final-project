@@ -12,12 +12,14 @@ namespace APIdevises
 
         protected abstract string GenererContenu(List<Cotation> cotations);
 
-        public void ExporterVersFichier(List<Cotation> cotations, DateOnly date)
+        public void ExporterVersFichier(List<Cotation> cotations, DateOnly date, string outputPath)
         {
+            Directory.CreateDirectory(outputPath);
             string nomFichier = $"Cotations-{date:yyyyMMdd}.{Extension}";
+            string cheminComplet = Path.GetFullPath(Path.Combine(outputPath, nomFichier));
             string contenu = GenererContenu(cotations);
-            File.WriteAllText(nomFichier, contenu);
-            Console.WriteLine($"Fichier généré : {nomFichier}");
+            File.WriteAllText(cheminComplet, contenu);
+            Console.WriteLine($"Fichier généré : {cheminComplet}");
         }
     }
 }
