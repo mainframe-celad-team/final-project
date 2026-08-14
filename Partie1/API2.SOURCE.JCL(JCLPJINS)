@@ -1,0 +1,96 @@
+//JCLPJINS  JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H,TIME=(0,30)
+//*
+//*----------------------------------------------------------------*
+//* ===> CHANGER XX PAR N¢ DU GROUPE   (XX 01 @ 15)     *
+//*      CHANGER    APIXXDB$ PAR LE NOM DU PROGRAMME    *
+//*----------------------------------------------------------------*
+//*
+//*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*
+//*   CETTE PROCEDURE CONTIENT 5 STEPS :                            *
+//*        ======> SI RE-EXECUTION FAIRE RESTART AU "STEPRUN"       *
+//*                                                                  *
+//*        1/  PRECOMPILE  DB2                                      *
+//*        2/  COMPILE COBOL II                                     *
+//*        3/  LINKEDIT  (DANS FORM.CICS.LOAD)                      *
+//*        4/  BIND PLAN PARTIR DE APIXX.SOURCE.DBRMLIB              *
+//*        5/  EXECUTE DU PROGRAMME                                 *
+//*   LES  PROCEDURES  SE TROUVENT DANS SDJ.FORM.PROCLIB             *
+//*                                                                  *
+//*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*
+//PROCLIB   JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API2,
+//             NOMPGM=PRJINS
+//*
+//APPROC    EXEC COMPDB2
+//STEPDB2.SYSLIB   DD DSN=&SYSUID..SOURCE.DCLGEN,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=&SYSUID..SOURCE.DB2(&NOMPGM),DISP=SHR
+//STEPDB2.DBRMLIB  DD DSN=&SYSUID..SOURCE.DBRMLIB(&NOMPGM),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=&SYSUID..SOURCE.PGMLIB(&NOMPGM),DISP=SHR
+//*
+//*--- ETAPE DE BIND ------------------------------------------------
+//*
+//*************************
+//*  SUPPRESSION SI EXISTE
+//*************************
+//SUPPKSDS EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+   DELETE API2.PROJET.COTATION.KSDS
+/*
+//******************************
+//*  CREATION D'UN FICHIER KSDS
+//******************************
+//CREEKSDS EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+   DEFINE CLUSTER (NAME(API2.PROJET.COTATION.KSDS)  -
+                VOLUME(APIWK1)                      -
+                TRK(1 1)                            -
+                CISZ(4096)                          -
+                FREESPACE(10 20)                    -
+                KEYS(3 0)                           -
+                RECORDSIZE(30 30)                   -
+                INDEXED)                            -
+           DATA (NAME(API2.PROJET.COTATION.KSDS.D)) -
+          INDEX (NAME(API2.PROJET.COTATION.KSDS.I))
+/*
+//********************************
+//*  ALIMENTATION DU FICHIER KSDS
+//********************************
+//ALIMKSDS EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//DDIN     DD DSN=API2.PROJET.COTATION.DATA,DISP=SHR
+//DDOUT    DD DSN=API2.PROJET.COTATION.KSDS,DISP=OLD
+//SYSIN    DD *
+   REPRO INFILE(DDIN)    -
+         OUTFILE(DDOUT)
+   PRINT INDATASET(API2.PROJET.COTATION.KSDS) CHAR
+/*
+//BIND      EXEC PGM=IKJEFT01,COND=(8,LT)
+//DBRMLIB DD  DSN=&SYSUID..SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN     (PRJINS) -
+       QUALIFIER (API2)   -
+       ACTION    (REPLACE) -
+       MEMBER    (PRJINS) -
+       VALIDATE  (BIND)   -
+       ISOLATION (CS)     -
+       ACQUIRE   (USE)    -
+       RELEASE   (COMMIT) -
+       EXPLAIN   (NO)
+/*
+//STEPRUN  EXEC PGM=IKJEFT01,COND=(8,LT)
+//STEPLIB  DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//NEWPRODS DD DSN=API2.PROJET.NEWPRODS.DATA,DISP=SHR
+//NEWERROR DD DSN=API2.PROJET.NEWPRODS.ERR,DISP=SHR
+//COTATION DD DSN=API2.PROJET.COTATION.KSDS,DISP=SHR
+//TESTS    DD DSN=API2.PROJET.TESTS.DATA,DISP=SHR
+//SYSOUT   DD SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(PRJINS) PLAN (PRJINS)
+/*

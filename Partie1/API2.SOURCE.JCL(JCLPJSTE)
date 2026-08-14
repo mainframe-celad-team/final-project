@@ -1,0 +1,17 @@
+//JCLPJSTE  JOB (ACCT#),'LAURIEN',MSGCLASS=H,REGION=4M,
+//    CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,COND=(8,LT),
+//    TIME=(0,30)
+//****************************************
+//* ETAPE DE COMPILATION DU SOUS PROGRAMME
+//****************************************
+//COMPILS  EXEC IGYWCL,PARM.COBOL=(DYNAM,ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD DSN=API2.SOURCE.COBOL(PRJSTEST),DISP=SHR
+//COBOL.SYSLIB DD DSN=CEE.SCEESAMP,DISP=SHR
+//             DD DSN=API2.SOURCE.COPY,DISP=SHR
+//****************************************
+//*  ETAPE DE LINKEDIT
+//****************************************
+//LKED.SYSLMOD DD DSN=API2.SOURCE.PGMLIB,DISP=SHR
+//LKED.SYSIN DD *
+ NAME PRJSTEST(R)
+/*

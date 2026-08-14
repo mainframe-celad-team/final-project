@@ -1,0 +1,38 @@
+//JCLPJGFA JOB (ACCT#),'LAURIEN',MSGCLASS=H,REGION=4M,
+//    CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,COND=(8,LT),
+//    TIME=(0,30)
+//****************************************
+//*  ETAPE DE COMPILATION
+//****************************************
+//COMPILA  EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD DSN=API2.SOURCE.COBOL(PRJFACT),DISP=SHR
+//COBOL.SYSLIB DD DSN=CEE.SCEESAMP,DISP=SHR
+//****************************************
+//*  ETAPE DE LINKEDIT
+//****************************************
+//LKED.SYSLMOD DD DSN=API2.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN DD *
+ NAME PRJFACT(R)
+/*
+//****************************************
+//*  ETAPE DE SUPPRESSION DU FICHIER RECAP
+//****************************************
+//STEP00   EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  DELETE API2.PROJET.FACTURE.DATA
+/*
+//*****************************************************
+//*  ETAPE D'EXECUTION : EXECUTION DU PROGRAMME PRJFACT
+//*****************************************************
+//RUNFACT  EXEC PGM=PRJFACT
+//STEPLIB  DD DSN=API2.COBOL.LOAD,DISP=SHR
+//SYSOUT   DD SYSOUT=*
+//ORDERS   DD DSN=API2.PROJET.EXTRFAC.DATA,DISP=SHR
+//FACTURE  DD DSN=API2.PROJET.FACTURE.DATA,DISP=(NEW,CATLG,DELETE),
+//        DCB=(RECFM=FB,LRECL=71,BLKSIZE=710),
+//        SPACE=(TRK,(1,1),RLSE)
+//SYSIN    DD *
+100
+333
+/*
