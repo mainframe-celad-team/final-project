@@ -29,6 +29,7 @@ CEMT SET FILE(PARTS3) OPEN
 
 --- ordre démo ---
 - cics -
+0. KSDS doit etre vide lancer API3.SOURCE.JCL(JP5PADF) sinon JP5PADF
 1. CEMT SET FILE(PARTS3) OPEN
 2. T3AJ
 3. T3LG
