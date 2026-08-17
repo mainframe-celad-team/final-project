@@ -26,3 +26,16 @@ T3LG
 
 CEMT SET FILE(PARTS3) CLOSED
 CEMT SET FILE(PARTS3) OPEN
+
+--- ordre démo ---
+- cics -
+0. KSDS doit etre vide lancer API3.SOURCE.JCL(JP5PADF) sinon JP5PADF
+1. CEMT SET FILE(PARTS3) OPEN
+2. T3AJ
+3. T3LG
+4. Entrer deux piece dont une numéro 77 et l'autre > 90
+5. CEMT SET FILE(PARTS3) CLOSED
+6. executer API3.SOURCE.JCL(JP5BASC)  JP5BASC
+7. montrer la sysout de api03DB
+8. eventuellement montrer m.11.1
+9. SELECT * FROM API3.PARTS;
